@@ -61,19 +61,19 @@ All running **pure client-side**—no backend required!
 
 # Project Structure
 /
-├── index.html
-├── css/
-│   └── styles.css
-├── js/
-│   ├── settings.js
-│   ├── fb-auth.js
-│   ├── viz.js
-│   ├── activities.js
-│   ├── presets.js
-│   ├── conversation.js
-│   ├── partnerships.js
-│   ├── llm.js
-│   └── payment.js
+├── index.html  
+├── css/  
+│   └── styles.css  
+├── js/  
+│   ├── settings.js  
+│   ├── fb-auth.js  
+│   ├── viz.js  
+│   ├── activities.js  
+│   ├── presets.js  
+│   ├── conversation.js  
+│   ├── partnerships.js  
+│   ├── llm.js  
+│   └── payment.js  
 └── README.md
 
 
@@ -544,18 +544,18 @@ document.addEventListener('DOMContentLoaded', initPayment);
 
 
 # Features & Usage
-•	⚙️ **Settings**: swap LLM/API keys & payment via top-right gear.
-•	🔐 **Login**: fetch name, email, picture, likes, posts, comments.
-•	📊 **Information**: radar chart of your interests.
+•	⚙️ **Settings**: swap LLM/API keys & payment via top-right gear.  
+•	🔐 **Login**: fetch name, email, picture, likes, posts, comments.  
+•	📊 **Information**: radar chart of your interests.  
 •	🎯 **Activities**:
 	1.	Your Activities (based on your profile)
 	2.	Other’s Activities (based on the other entity)
 	3.	Joint Activities (compatible fun activities)
 – Click any to generate a thought and preview how it changes your radar.
-•	📑 **Presets**: compare with any profession/personality.
-•	💬 **Conversation**: prep topics + example chat + audio “podcast”.
-•	🤝 **Partnerships**: project ideas + step-by-step plans.
-•	💳 **Premium gating**: blur sections until PayPal/GCash payment.
+•	📑 **Presets**: compare with any profession/personality.  
+•	💬 **Conversation**: prep topics + example chat + audio “podcast”.  
+•	🤝 **Partnerships**: project ideas + step-by-step plans.  
+•	💳 **Premium gating**: blur sections until PayPal/GCash payment.  
 •	🎉 **Viral extras**: shareable charts, personality cards, embed widget, leaderboards, “Talk-Like-Me” mode.
 
 Copilot will help fill in helper functions (extractInterests, activity analysis, GCash integration). Enjoy building your viral Vibe Coding Visualizer! 😊
