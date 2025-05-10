@@ -18,25 +18,16 @@
     );
 
     window.fbAsyncInit = function() {
-    //<!-- Initialize the SDK with your app and the Graph API version for your app -->
-    FB.init({
-        appId  : '{your-facebook-app-id}',
-        xfbml  : true,
-        version  : '{the-graph-api-version-for-your-app}'
-    });
-    
-    //<!-- If you are logged in, automatically get your name and email adress, your public profile information -->
-    FB.login(function(response) {
-      if (response.authResponse) {
-        console.log('Welcome!  Fetching your information.... ');
-        FB.api('/me', {fields: 'name, email'}, function(response) {
-        document.getElementById("profile").innerHTML = "Good to see you, " + response.name + ". i see your email address is " + response.email
-        });
-      } else { 
-        //<!-- If you are not logged in, the login dialog will open for you to login asking for permission to get your public profile and email -->
-        console.log('User cancelled login or did not fully authorize.'); }
+      FB.init({
+        appId: FB_APP_ID, // Use the app ID from settings.js
+        cookie: true,
+        xfbml: true,
+        version: 'v16.0' // Match the version in fb-auth.js
       });
     };
+
+    // Remove the redundant FB.login logic here to avoid duplication with fb-auth.js
+    // Ensure fb-auth.js handles login and profile fetching logic
 
   </script> 
   <!-- </script> -->
