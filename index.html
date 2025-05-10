@@ -35,8 +35,28 @@
               <option value="deepseek">DeepSeek</option>
             </select>
           </label>
-          <label>API Key:</label>
+          <label>API Key:
+            <input id="llm-api-key" type="text" placeholder="sk-…" required />
+          </label>
         </fieldset>
+        <fieldset>
+          <legend>Payment</legend>
+          <label>Gateway:
+            <select id="payment-mode">
+              <option value="paypal">PayPal</option>
+              <option value="gcash">GCash</option>
+            </select>
+          </label>
+          <label>PayPal Client ID:
+            <input id="paypal-client-id" type="text" placeholder="sb-…" />
+          </label>
+          <label>GCash Client ID:
+            <input id="gcash-client-id" type="text" />
+          </label>
+        </fieldset>
+        <div class="modal-actions">
+          <button type="button" id="cancel-settings">Cancel</button>
+        </div>
       </form>
     </div>
   </div>
