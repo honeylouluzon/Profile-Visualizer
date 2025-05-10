@@ -21,3 +21,13 @@ document.getElementById('fb-login-btn').onclick = () => {
     } else alert('Login failed.');
   }, { scope:'email,public_profile,user_likes,user_posts,user_comments' });
 };
+
+document.getElementById('settings-modal').classList.add('hidden'); // Ensure settings modal is hidden initially
+
+// Check login status and hide settings if not logged in
+FB.getLoginStatus(response => {
+  if (response.status !== 'connected') {
+    document.getElementById('settings-modal').classList.add('hidden');
+    document.getElementById('open-settings').style.display = 'none';
+  }
+});

@@ -1,0 +1,502 @@
+/* Reset and base styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    line-height: 1.6;
+    color: #f5f5f5; /* Light text for dark backgrounds */
+    background: #2e2e2e; /* Matte dark gray background */
+}
+
+/* Header styles */
+.header {
+    background: linear-gradient(90deg, #d81b60, #8e24aa); /* Matte pink-purple gradient */
+    color: white;
+    padding: 1rem;
+    text-align: center;
+    border-bottom: 4px solid #b71c1c; /* Deep matte red */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.header h1 {
+    font-size: 2.2rem;
+    font-weight: 700;
+    text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.4);
+    letter-spacing: 1px;
+}
+
+/* Main container layout */
+.app-container {
+    display: flex;
+    min-height: calc(100vh - 4rem);
+    padding: 1rem;
+    gap: 1rem;
+    flex-wrap: wrap; /* Responsive layout */
+}
+
+/* Sidebar styles */
+.sidebar {
+    width: 25%;
+    background: #3a3a3a; /* Matte dark gray */
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+    border: 2px solid #d81b60; /* Matte pink border */
+    color: #f5f5f5; /* Light text */
+}
+
+.entity-list {
+    margin-bottom: 2rem;
+}
+
+.entity-list h2,
+.presets h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    color: #f06292; /* Soft matte pink */
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+    text-transform: uppercase;
+}
+
+.entity {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+    background: #4a4a4a; /* Matte medium gray */
+    border-radius: 8px;
+    cursor: grab;
+    transition: all 0.3s ease;
+    user-select: none;
+    border: 2px solid transparent;
+    color: #f5f5f5; /* Light text */
+}
+
+.entity:hover {
+    background: #616161; /* Slightly lighter gray */
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.entity:active {
+    cursor: grabbing;
+}
+
+.entity.dragging {
+    opacity: 0.5;
+    background-color: #e9ecef;
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.entity-icon {
+    width: 28px;
+    height: 28px;
+    margin-right: 0.5rem;
+    pointer-events: none;
+}
+
+.entity span {
+    pointer-events: none;
+}
+
+.preset-btn {
+    display: block;
+    width: 100%;
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+    background: #d81b60; /* Matte pink */
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+    font-weight: bold;
+    color: white;
+    text-transform: uppercase;
+}
+
+.preset-btn:hover {
+    background: #ad1457; /* Darker matte pink */
+    transform: translateY(-2px);
+}
+
+.preset-btn.active {
+    background-color: #007bff;
+    color: white;
+}
+
+/* Main content area */
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: 100%; /* Responsive width */
+}
+
+.canvas-area {
+    flex: 1;
+    background: #3a3a3a; /* Matte dark gray */
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+    min-height: 400px;
+    position: relative;
+    border: 2px solid #d81b60; /* Matte pink border */
+    transition: all 0.3s ease;
+    color: #f5f5f5; /* Light text */
+}
+
+.canvas-area.drag-target {
+    border: 2px solid #f06292; /* Soft matte pink */
+    background: rgba(216, 27, 96, 0.1); /* Transparent pink */
+}
+
+.canvas-area.drag-over {
+    border: 2px dashed #007bff;
+    background-color: rgba(0, 123, 255, 0.05);
+    transform: scale(1.01);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.chart-container {
+    width: 100%;
+    height: 100%;
+    min-height: 400px;
+    position: relative;
+    background: #f8bbd0; /* Soft pink background if text cannot be white */
+    color: #ffffff; /* White text for chart labels */
+    border: 2px solid #d81b60; /* Matte pink border */
+    border-radius: 12px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+}
+
+.chart-container canvas {
+    color: #ffffff; /* White text for chart labels */
+}
+
+.chart-container .chart-legend {
+    color: #d81b60; /* Matte pink for entity names */
+    font-weight: bold; /* Bold entity names */
+}
+
+.chart-container .chart-grid {
+    stroke: #ffffff; /* White grid lines */
+}
+
+.welcome-message {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: #f06292; /* Soft matte pink */
+    font-size: 1.2rem;
+    font-weight: bold;
+    text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.3);
+    z-index: 1;
+    pointer-events: none;
+}
+
+/* Control panel styles */
+.control-panel {
+    background: #3a3a3a; /* Matte medium gray */
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+    border: 2px solid #d81b60; /* Matte pink border */
+    color: #f5f5f5; /* Light text */
+}
+
+.dimension-controls {
+    margin-bottom: 1rem;
+}
+
+.entity-controls {
+    margin-bottom: 2rem;
+    padding: 1rem;
+    background-color: #3a3a3a;
+    border-radius: 4px;
+}
+
+.entity-controls h3 {
+    margin-bottom: 1rem;
+    font-size: 1.4rem;
+    color: #f06292;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.dimension-slider {
+    margin-bottom: 1rem;
+    background: #3a3a3a; /* Matte dark gray background */
+    border: 2px solid #d81b60; /* Matte pink border */
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+    color: #f5f5f5; /* Light text */
+}
+
+.dimension-slider label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+    color: #f06292; /* Soft matte pink */
+    text-transform: uppercase;
+}
+
+.dimension-slider input[type="range"] {
+    width: 100%;
+    margin-bottom: 0.5rem;
+    accent-color: #d81b60; /* Matte pink slider */
+    background: transparent; /* Invisible background */
+}
+
+.dimension-value {
+    font-size: 0.9rem;
+    color: #f5f5f5; /* Light text for dark background */
+}
+
+.action-buttons {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* 3 columns */
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 8px;
+    background: #d81b60; /* Matte pink */
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.btn:hover {
+    background: #ad1457; /* Darker matte pink */
+    transform: translateY(-2px);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .app-container {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+    }
+
+    .canvas-area {
+        min-height: 300px;
+    }
+
+    .chart-container {
+        min-height: 300px;
+    }
+}
+
+/* Accessibility */
+.btn:focus,
+.preset-btn:focus,
+input[type="range"]:focus {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+    body {
+        background-color: white;
+    }
+
+    .header {
+        background-color: black;
+    }
+
+    .btn {
+        background-color: black;
+        border: 2px solid white;
+    }
+}
+
+.comparison-result {
+    margin-top: 1rem; /* Space between the chart and the result */
+    padding: 1rem;
+    background: #3a3a3a; /* Matte dark gray */
+    border: 2px solid #d81b60; /* Matte pink border */
+    border-radius: 12px;
+    font-size: 1rem;
+    color: #f06292; /* Soft matte pink */
+    text-align: center;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+    width: 100%; /* Ensure it spans the full width below the chart */
+    display: none; /* Initially hidden */
+}
+
+.action-section {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #3a3a3a; /* Matte dark gray */
+    border: 2px solid #d81b60; /* Matte pink border */
+    border-radius: 12px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+    color: #f5f5f5; /* Light text */
+}
+
+.action-section h3 {
+    margin-bottom: 1rem;
+    font-size: 1.4rem;
+    color: #f06292; /* Soft matte pink */
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+    text-transform: uppercase;
+}
+
+.entity-selector {
+    margin-bottom: 1rem;
+}
+
+.entity-selector label {
+    margin-right: 1rem;
+    font-size: 1rem;
+    color: #f5f5f5; /* Light text for dark background */
+}
+
+.action-btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 8px;
+    background: #d81b60; /* Matte pink */
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.action-btn:hover {
+    background: #ad1457; /* Darker matte pink */
+    transform: translateY(-2px);
+}
+
+.thought-display {
+    margin-top: 1rem;
+    font-style: italic;
+    color: white;
+    text-align: center;
+    display: none;
+}
+
+.conversation-section {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #3a3a3a; /* Matte dark gray */
+    border: 2px solid #d81b60; /* Matte pink border */
+    border-radius: 12px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+}
+
+.conversation-section h3 {
+    margin-bottom: 1rem;
+    font-size: 1.4rem;
+    color: #f06292; /* Soft matte pink */
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+    text-transform: uppercase;
+}
+
+.conversation-box {
+    height: 200px;
+    overflow-y: auto;
+    background: #2e2e2e; /* Matte dark gray */
+    border: 2px solid #d81b60; /* Matte pink border */
+    border-radius: 8px;
+    padding: 0.5rem;
+    font-size: 0.9rem;
+    color: #e0e0e0; /* Light gray text */
+    line-height: 1.4;
+}
+
+.story-section {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #3a3a3a; /* Matte dark gray */
+    border: 2px solid #d81b60; /* Matte pink border */
+    border-radius: 12px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+}
+
+.story-section h3 {
+    margin-bottom: 1rem;
+    font-size: 1.4rem;
+    color: #f06292; /* Soft matte pink */
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+    text-transform: uppercase;
+}
+
+.story-type-selector {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* 3 columns */
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.story-type-selector label {
+    font-size: 0.9rem; /* Reduced font size to fit text */
+    color: #f5f5f5; /* Light text for dark background */
+    background: #3a3a3a; /* Matte dark gray */
+    padding: 0.5rem;
+    border-radius: 8px;
+    display: flex; /* Use flexbox for inline alignment */
+    align-items: center; /* Center-align text vertically */
+    gap: 0.5rem; /* Space between the radio button and text */
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.story-type-selector label:hover {
+    background: #616161; /* Slightly lighter gray */
+    color: #f06292; /* Soft matte pink */
+}
+
+.story-box {
+    height: 200px;
+    overflow-y: auto;
+    background: #2e2e2e; /* Matte dark gray */
+    border: 2px solid #d81b60; /* Matte pink border */
+    border-radius: 8px;
+    padding: 0.5rem;
+    font-size: 0.9rem;
+    color: #e0e0e0; /* Light gray text */
+    line-height: 1.4;
+}
+
+.combine-section {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #3a3a3a; /* Matte dark gray */
+    border: 2px solid #d81b60; /* Matte pink border */
+    border-radius: 12px;
+    text-align: left; /* Align the title and content to the left */
+    font-size: 1rem; /* Keep the result text size consistent */
+    color: #f06292; /* Soft matte pink */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+}
+
+.combine-section h3 {
+    font-size: 1.4rem; /* Match the title size of other sections */
+    margin-bottom: 1rem;
+    color: #f06292; /* Soft matte pink */
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+    text-transform: uppercase;
+}
+
+.combine-section p {
+    font-size: 1rem;
+    color: #e0e0e0; /* Light gray text */
+}

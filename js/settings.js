@@ -10,7 +10,7 @@ document.getElementById('open-settings').onclick = () => {
   document.getElementById('llm-provider').value = LLM_PROVIDER;
   document.getElementById('llm-api-key').value  = LLM_API_KEY;
   document.getElementById('payment-mode').value = PAYMENT_MODE;
-  document.getElementById('paypal-client-id').value = PAYPAL_CLIENT_ID;
+  document.getElementById
   document.getElementById('gcash-client-id').value  = GCASH_CLIENT_ID;
   modal.classList.remove('hidden');
 };

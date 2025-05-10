@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LinkedIn Interest Analyzer</title>
+    <link rel="stylesheet" href="css/main.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // ProfileManager
+        class ProfileManager {
+            constructor() {
+                this.profiles = new Map();
+                this.nextId = 1;
+                this.combinedProfiles = new Map();
+                this.loadProfiles();
+            }
+
+            loadProfiles() {
+                const savedProfiles = localStorage.getItem('linkedInProfiles');
+                if (savedProfiles) {
+                    const parsedProfiles = JSON.parse(savedProfiles);
+                    parsedProfiles.forEach(profile => {
+                        this.profiles.set(profile.id, profile);
+                        this.nextId = Math.max(this.nextId, profile.id + 1);
+                    });
+                }
+            }
+
+            saveProfiles() {
+                const profilesArray = Array.from(this.profiles.values());
+                localStorage.setItem('linkedInProfiles', JSON.stringify(profilesArray));
+            }
+
+            createProfile(text, name = null) {
+                const id = this.nextId++;
+                const profile = {
+                    id,
+                    name: name || `Profile ${id}`,
+                    text,
+                    interests: this.analyzeInterests(text),
+                    isCombined: false,
+                    parentNames: []
+                };
+                this.profiles.set(id, profile);
+                this.saveProfiles();
+                return profile;
+            }
+
+            analyzeInterests(text) {
+                // Extract interests from LinkedIn profile text
+                const interests = {
+                    technology: this.calculateInterestScore(text, ['tech', 'software', 'programming', 'coding', 'development', 'engineering', 'data', 'AI', 'machine learning', 'cloud']),
+                    business: this.calculateInterestScore(text, ['business', 'management', 'leadership', 'strategy', 'marketing', 'sales', 'finance', 'entrepreneur', 'startup']),
+                    education: this.calculateInterestScore(text, ['education', 'learning', 'teaching', 'research', 'academic', 'university', 'school', 'student']),
+                    healthcare: this.calculateInterestScore(text, ['health', 'medical', 'medicine', 'healthcare', 'hospital', 'doctor', 'nurse', 'patient']),
+                    creative: this.calculateInterestScore(text, ['design', 'art', 'creative', 'writing', 'music', 'photography', 'film', 'media']),
+                    social: this.calculateInterestScore(text, ['social', 'community', 'volunteer', 'nonprofit', 'charity', 'humanitarian', 'activism']),
+                    sports: this.calculateInterestScore(text, ['sports', 'fitness', 'athlete', 'training', 'coach', 'team', 'competition']),
+                    travel: this.calculateInterestScore(text, ['travel', 'tourism', 'adventure', 'exploration', 'culture', 'international']),
+                    food: this.calculateInterestScore(text, ['food', 'cooking', 'culinary', 'restaurant', 'chef', 'cuisine', 'beverage']),
+                    environment: this.calculateInterestScore(text, ['environment', 'sustainability', 'green', 'renewable', 'climate', 'conservation'])
+                };
+                return interests;
+            }
+
+            calculateInterestScore(text, keywords) {
+                let score = 0;
+                const words = text.toLowerCase().split(/\s+/);
+                keywords.forEach(keyword => {
+                    const regex = new RegExp(keyword, 'gi');
+                    const matches = text.match(regex);
+                    if (matches) {
+                        score += matches.length * 10;
+                    }
+                });
+                return Math.min(score, 100);
+            }
+
+            combineProfiles(profile1Id, profile2Id) {
+                const profile1 = this.profiles.get(profile1Id);
+                const profile2 = this.profiles.get(profile2Id);
+                
+                if (!profile1 || !profile2) {
+                    console.error('One or both profiles not found');
+                    return null;
+                }
+
+                // Calculate combined interests
+                const combinedInterests = {};
+                Object.keys(profile1.interests).forEach(interest => {
+                    combinedInterests[interest] = Math.round(
+                        (profile1.interests[interest] + profile2.interests[interest]) / 2
+                    );
+                });
+
+                // Create combined profile
+                const combinedName = `${profile1.name}+${profile2.name}`;
+                const combinedProfile = this.createProfile('', combinedName);
+                combinedProfile.interests = combinedInterests;
+                combinedProfile.isCombined = true;
+                combinedProfile.parentNames = [profile1.name, profile2.name];
+
+                // Store the relationship
+                this.combinedProfiles.set(combinedProfile.id, {
+                    parent1: profile1Id,
+                    parent2: profile2Id
+                });
+
+                return combinedProfile;
+            }
+
+            deleteProfile(profileId) {
+                this.profiles.delete(profileId);
+                this.saveProfiles();
+            }
+
+            reset() {
+                this.profileManager.reset();
+                this.visualizationManager.reset();
+                this.selectedProfiles.clear();
+                this.updateProfileList();
+                this.updateSelectedProfilesUI();
+                localStorage.removeItem('linkedInProfiles');
+            }
+        }
+
+        // VisualizationManager
+        class VisualizationManager {
+            constructor() {
+                this.chart = null;
+                this.initializeChart();
+            }
+
+            initializeChart() {
+                const ctx = document.getElementById('visualizationChart');
+                if (!ctx) {
+                    console.error('Visualization chart canvas not found');
+                    return;
+                }
+
+                this.chart = new Chart(ctx, {
+                    type: 'radar',
+                    data: {
+                        labels: ['Technology', 'Business', 'Education', 'Healthcare', 'Creative', 'Social', 'Sports', 'Travel', 'Food', 'Environment'],
+                        datasets: []
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            r: {
+                                beginAtZero: true,
+                                max: 100,
+                                min: 0,
+                                ticks: {
+                                    stepSize: 20
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            addProfile(profile) {
+                if (!this.chart) {
+                    console.error('Chart not initialized');
+                    return;
+                }
+
+                const color = this.getProfileColor(profile.id);
+                const dataset = {
+                    label: profile.name,
+                    data: Object.values(profile.interests),
+                    backgroundColor: color + '40',
+                    borderColor: color,
+                    borderWidth: 2
+                };
+
+                this.chart.data.datasets.push(dataset);
+                this.chart.update();
+            }
+
+            getProfileColor(id) {
+                const colors = [
+                    '#4CAF50', '#2196F3', '#9C27B0', '#00BCD4', '#795548',
+                    '#607D8B', '#FF5722', '#E91E63', '#827717', '#FFC107',
+                    '#FF9800', '#8D6E63', '#78909C', '#90A4AE', '#673AB7',
+                    '#3F51B5', '#009688', '#F44336', '#9575CD', '#827717'
+                ];
+                return colors[id % colors.length];
+            }
+
+            reset() {
+                if (this.chart) {
+                    this.chart.data.datasets = [];
+                    this.chart.update();
+                }
+            }
+        }
+
+        // AnalysisManager
+        class AnalysisManager {
+            constructor(profileManager, visualizationManager) {
+                this.profileManager = profileManager;
+                this.visualizationManager = visualizationManager;
+                this.interests = ['technology', 'business', 'education', 'healthcare', 'creative', 'social', 'sports', 'travel', 'food', 'environment'];
+            }
+
+            findInterestClusters() {
+                const profiles = Array.from(this.profileManager.profiles.values());
+                if (profiles.length < 2) return [];
+
+                // Calculate similarity matrix
+                const similarities = [];
+                for (let i = 0; i < profiles.length; i++) {
+                    similarities[i] = [];
+                    for (let j = 0; j < profiles.length; j++) {
+                        if (i === j) {
+                            similarities[i][j] = 1;
+                            continue;
+                        }
+                        similarities[i][j] = this.calculateSimilarity(profiles[i], profiles[j]);
+                    }
+                }
+
+                // Find clusters using hierarchical clustering
+                const clusters = this.hierarchicalClustering(profiles, similarities);
+                return this.formatClusterResults(clusters);
+            }
+
+            calculateSimilarity(profile1, profile2) {
+                let similarity = 0;
+                let count = 0;
+                
+                for (const interest of this.interests) {
+                    if (profile1.interests[interest] !== undefined && 
+                        profile2.interests[interest] !== undefined) {
+                        const diff = Math.abs(profile1.interests[interest] - profile2.interests[interest]);
+                        similarity += 1 - (diff / 100);
+                        count++;
+                    }
+                }
+                
+                return count > 0 ? similarity / count : 0;
+            }
+
+            hierarchicalClustering(profiles, similarities, threshold = 0.7) {
+                const clusters = profiles.map(p => ({
+                    profiles: [p],
+                    type: p.name.includes('+') ? 'combined' : 'individual'
+                }));
+
+                while (clusters.length > 1) {
+                    let maxSim = -1;
+                    let mergeI = -1;
+                    let mergeJ = -1;
+
+                    for (let i = 0; i < clusters.length; i++) {
+                        for (let j = i + 1; j < clusters.length; j++) {
+                            const sim = this.calculateClusterSimilarity(
+                                clusters[i].profiles,
+                                clusters[j].profiles,
+                                similarities,
+                                profiles
+                            );
+                            if (sim > maxSim) {
+                                maxSim = sim;
+                                mergeI = i;
+                                mergeJ = j;
+                            }
+                        }
+                    }
+
+                    if (maxSim < threshold) break;
+
+                    const newCluster = {
+                        profiles: [...clusters[mergeI].profiles, ...clusters[mergeJ].profiles],
+                        type: 'mixed'
+                    };
+                    clusters.splice(mergeJ, 1);
+                    clusters[mergeI] = newCluster;
+                }
+
+                return clusters;
+            }
+
+            formatClusterResults(clusters) {
+                return clusters.map((cluster, index) => ({
+                    id: index + 1,
+                    profiles: cluster.profiles.map(p => ({
+                        name: p.name,
+                        interests: p.interests
+                    })),
+                    type: cluster.type,
+                    averageInterests: this.calculateAverageInterests(cluster.profiles),
+                    size: cluster.profiles.length,
+                    dominantInterest: this.findDominantInterest(cluster.profiles),
+                    similarity: this.calculateIntraClusterSimilarity(cluster.profiles),
+                    cohesionScore: this.calculateCohesionScore(cluster.profiles),
+                    diversityIndex: this.calculateDiversityIndex(cluster.profiles),
+                    interestTrends: this.calculateInterestTrends(cluster.profiles),
+                    insights: this.findKeyInsights(cluster.profiles)
+                }));
+            }
+
+            findDominantInterest(profiles) {
+                const avgInterests = this.calculateAverageInterests(profiles);
+                return Object.entries(avgInterests)
+                    .reduce((a, b) => a[1] > b[1] ? a : b)[0];
+            }
+
+            calculateAverageInterests(profiles) {
+                const avg = {};
+                for (const interest of this.interests) {
+                    const values = profiles
+                        .map(p => p.interests[interest])
+                        .filter(v => v !== undefined);
+                    
+                    if (values.length > 0) {
+                        avg[interest] = values.reduce((a, b) => a + b, 0) / values.length;
+                    }
+                }
+                return avg;
+            }
+
+            calculateIntraClusterSimilarity(profiles) {
+                if (profiles.length < 2) return 1;
+                
+                let totalSim = 0;
+                let count = 0;
+                
+                for (let i = 0; i < profiles.length; i++) {
+                    for (let j = i + 1; j < profiles.length; j++) {
+                        totalSim += this.calculateSimilarity(profiles[i], profiles[j]);
+                        count++;
+                    }
+                }
+                
+                return count > 0 ? totalSim / count : 0;
+            }
+
+            calculateCohesionScore(profiles) {
+                const similarities = [];
+                for (let i = 0; i < profiles.length; i++) {
+                    for (let j = i + 1; j < profiles.length; j++) {
+                        similarities.push(this.calculateSimilarity(profiles[i], profiles[j]));
+                    }
+                }
+                const avgSimilarity = similarities.reduce((a, b) => a + b, 0) / similarities.length;
+                return avgSimilarity;
+            }
+
+            calculateDiversityIndex(profiles) {
+                const uniqueTypes = new Set(profiles.map(p => p.type));
+                return uniqueTypes.size / profiles.length;
+            }
+
+            calculateInterestTrends(profiles) {
+                const trends = {};
+                for (const interest of this.interests) {
+                    const values = profiles.map(p => p.interests[interest]);
+                    const sortedValues = [...values].sort((a, b) => a - b);
+                    const median = sortedValues[Math.floor(sortedValues.length / 2)];
+                    const trend = values.every(v => v === median) ? 'stable' :
+                        values.every(v => v > median) ? 'up' : 'down';
+                    trends[interest] = trend;
+                }
+                return trends;
+            }
+
+            findKeyInsights(profiles) {
+                const insights = [];
+                for (const interest of this.interests) {
+                    const values = profiles.map(p => p.interests[interest]);
+                    const avg = values.reduce((a, b) => a + b, 0) / values.length;
+                    const max = Math.max(...values);
+                    const min = Math.min(...values);
+                    const leaders = profiles.filter(p => p.interests[interest] === max);
+                    
+                    insights.push(`${interest.charAt(0).toUpperCase() + interest.slice(1)}:
+- Average Interest: ${Math.round(avg)}%
+- Range: ${Math.round(min)}% - ${Math.round(max)}%
+- Most Interested: ${leaders.map(l => l.name).join(', ')}`);
+                }
+                return insights;
+            }
+        }
+
+        // Main App
+        class App {
+            constructor() {
+                this.profileManager = new ProfileManager();
+                this.visualizationManager = new VisualizationManager();
+                this.analysisManager = new AnalysisManager(this.profileManager, this.visualizationManager);
+                this.selectedProfiles = new Set();
+                this.initializeEventListeners();
+            }
+
+            initializeEventListeners() {
+                // Add profile button
+                const addProfileBtn = document.getElementById('addProfileBtn');
+                if (addProfileBtn) {
+                    addProfileBtn.addEventListener('click', () => this.showAddProfileModal());
+                }
+
+                // Analysis buttons
+                const clusterBtn = document.getElementById('clusterBtn');
+                const insightsBtn = document.getElementById('insightsBtn');
+
+                if (clusterBtn) {
+                    clusterBtn.addEventListener('click', () => this.showClusters());
+                }
+
+                if (insightsBtn) {
+                    insightsBtn.addEventListener('click', () => this.showInsights());
+                }
+
+                // Reset button
+                const resetBtn = document.getElementById('resetBtn');
+                if (resetBtn) {
+                    resetBtn.addEventListener('click', () => this.reset());
+                }
+
+                // Combine button
+                const combineBtn = document.getElementById('combineBtn');
+                if (combineBtn) {
+                    combineBtn.addEventListener('click', () => this.combineSelectedProfiles());
+                }
+
+                // Advanced Analysis buttons
+                const overlapMatrixBtn = document.getElementById('overlapMatrixBtn');
+                if (overlapMatrixBtn) {
+                    overlapMatrixBtn.addEventListener('click', () => this.showOverlapMatrix());
+                }
+                const growthDeclineBtn = document.getElementById('growthDeclineBtn');
+                if (growthDeclineBtn) {
+                    growthDeclineBtn.addEventListener('click', () => this.showGrowthDecline());
+                }
+                const archetypeBtn = document.getElementById('archetypeBtn');
+                if (archetypeBtn) {
+                    archetypeBtn.addEventListener('click', () => this.showArchetypes());
+                }
+                const diversityBtn = document.getElementById('diversityBtn');
+                if (diversityBtn) {
+                    diversityBtn.addEventListener('click', () => this.showDiversity());
+                }
+                const outlierBtn = document.getElementById('outlierBtn');
+                if (outlierBtn) {
+                    outlierBtn.addEventListener('click', () => this.showOutliers());
+                }
+                const correlationBtn = document.getElementById('correlationBtn');
+                if (correlationBtn) {
+                    correlationBtn.addEventListener('click', () => this.showCorrelation());
+                }
+            }
+
+            showAddProfileModal() {
+                const modal = document.createElement('div');
+                modal.className = 'modal';
+                modal.innerHTML = `
+                    <div class="modal-content">
+                        <h3>Add LinkedIn Profile</h3>
+                        <div class="form-group">
+                            <label for="profileName">Profile Name:</label>
+                            <input type="text" id="profileName" placeholder="Enter profile name">
+                        </div>
+                        <div class="form-group">
+                            <label for="profileText">Profile Text:</label>
+                            <textarea id="profileText" placeholder="Paste LinkedIn profile text here"></textarea>
+                        </div>
+                        <div class="modal-buttons">
+                            <button class="btn" onclick="window.app.addProfile()">Add Profile</button>
+                            <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancel</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            }
+
+            addProfile() {
+                const nameInput = document.getElementById('profileName');
+                const textInput = document.getElementById('profileText');
+                
+                if (!textInput.value.trim()) {
+                    alert('Please enter profile text');
+                    return;
+                }
+
+                const profile = this.profileManager.createProfile(textInput.value, nameInput.value.trim() || null);
+                this.visualizationManager.addProfile(profile);
+                
+                // Update profile list
+                this.updateProfileList();
+                
+                // Close modal
+                document.querySelector('.modal').remove();
+            }
+
+            updateProfileList() {
+                const profileList = document.getElementById('profileList');
+                if (!profileList) return;
+
+                profileList.innerHTML = '';
+                this.profileManager.profiles.forEach(profile => {
+                    const profileElement = document.createElement('div');
+                    profileElement.className = 'profile-item';
+                    profileElement.innerHTML = `
+                        <span class="profile-name">${profile.name}</span>
+                        <div class="profile-actions">
+                            <button class="profile-btn select-profile" data-id="${profile.id}">Select</button>
+                            <button class="profile-btn delete-profile" data-id="${profile.id}">Delete</button>
+                        </div>
+                    `;
+
+                    profileElement.querySelector('.select-profile').addEventListener('click', (e) => {
+                        this.handleProfileSelection(profile.id);
+                    });
+
+                    profileElement.querySelector('.delete-profile').addEventListener('click', (e) => {
+                        this.deleteProfile(profile.id);
+                    });
+
+                    profileList.appendChild(profileElement);
+                });
+            }
+
+            handleProfileSelection(profileId) {
+                const profile = this.profileManager.profiles.get(profileId);
+                if (!profile) return;
+
+                if (this.selectedProfiles.has(profileId)) {
+                    this.selectedProfiles.delete(profileId);
+                    this.visualizationManager.highlightProfile(profileId, false);
+                } else {
+                    if (this.selectedProfiles.size < 2) {
+                        this.selectedProfiles.add(profileId);
+                        this.visualizationManager.highlightProfile(profileId, true);
+                    }
+                }
+
+                this.updateSelectedProfilesUI();
+            }
+
+            updateSelectedProfilesUI() {
+                const selectedContainer = document.getElementById('selectedProfiles');
+                if (!selectedContainer) return;
+
+                selectedContainer.innerHTML = '';
+                this.selectedProfiles.forEach(profileId => {
+                    const profile = this.profileManager.profiles.get(profileId);
+                    if (profile) {
+                        const profileElement = document.createElement('div');
+                        profileElement.className = 'selected-profile';
+                        profileElement.textContent = profile.name;
+                        selectedContainer.appendChild(profileElement);
+                    }
+                });
+
+                const combineBtn = document.getElementById('combineBtn');
+                if (combineBtn) {
+                    combineBtn.disabled = this.selectedProfiles.size !== 2;
+                }
+            }
+
+            combineSelectedProfiles() {
+                if (this.selectedProfiles.size !== 2) return;
+
+                const [profile1Id, profile2Id] = Array.from(this.selectedProfiles);
+                const combinedProfile = this.profileManager.combineProfiles(profile1Id, profile2Id);
+
+                if (combinedProfile) {
+                    this.visualizationManager.addProfile(combinedProfile);
+                    this.selectedProfiles.clear();
+                    this.updateSelectedProfilesUI();
+                    this.updateProfileList();
+                }
+            }
+
+            deleteProfile(profileId) {
+                this.profileManager.deleteProfile(profileId);
+                this.visualizationManager.reset();
+                this.profileManager.profiles.forEach(profile => {
+                    this.visualizationManager.addProfile(profile);
+                });
+                this.updateProfileList();
+                this.updateSelectedProfilesUI();
+            }
+
+            reset() {
+                this.profileManager.reset();
+                this.visualizationManager.reset();
+                this.selectedProfiles.clear();
+                this.updateProfileList();
+                this.updateSelectedProfilesUI();
+            }
+
+            showClusters() {
+                const resultsSection = document.getElementById('clusterResults');
+                const container = resultsSection.querySelector('.clusters-container');
+                const loadingIndicator = resultsSection.querySelector('.loading-indicator');
+                const emptyState = resultsSection.querySelector('.empty-state');
+                
+                if (!container || !resultsSection) return;
+                
+                document.querySelectorAll('.result-section').forEach(section => {
+                    section.style.display = 'none';
+                });
+                
+                resultsSection.style.display = 'block';
+                loadingIndicator.style.display = 'block';
+                container.style.display = 'none';
+                emptyState.style.display = 'none';
+
+                setTimeout(() => {
+                    const clusters = this.analysisManager.findInterestClusters();
+                    loadingIndicator.style.display = 'none';
+                    
+                    if (clusters.length === 0) {
+                        emptyState.style.display = 'block';
+                        container.style.display = 'none';
+                        return;
+                    }
+                    
+                    container.style.display = 'grid';
+                    container.innerHTML = clusters.map(cluster => `
+                        <div class="cluster">
+                            <div class="cluster-header">
+                                <span class="cluster-type">${cluster.type.charAt(0).toUpperCase() + cluster.type.slice(1)} Cluster</span>
+                                <span class="cluster-size">${cluster.size} profiles</span>
+                            </div>
+                            <div class="cluster-info">
+                                <div class="cluster-stat">
+                                    <span>Dominant Interest:</span>
+                                    <span>${cluster.dominantInterest}</span>
+                                </div>
+                                <div class="cluster-stat">
+                                    <span>Internal Similarity:</span>
+                                    <span>${Math.round(cluster.similarity * 100)}%</span>
+                                </div>
+                                <div class="cluster-stat">
+                                    <span>Cohesion Score:</span>
+                                    <span>${Math.round(cluster.cohesionScore * 100)}%</span>
+                                </div>
+                            </div>
+                            <div class="cluster-profiles">
+                                ${cluster.profiles.map(profile => `
+                                    <span class="cluster-profile">${profile.name}</span>
+                                `).join('')}
+                            </div>
+                            <div class="cluster-insights">
+                                <div class="insight-header">Key Insights</div>
+                                <ul class="insight-list">
+                                    ${cluster.insights.map(insight => `
+                                        <li class="insight-item">${insight}</li>
+                                    `).join('')}
+                                </ul>
+                            </div>
+                        </div>
+                    `).join('');
+                }, 500);
+            }
+
+            showInsights() {
+                const resultsSection = document.getElementById('insightsResults');
+                const loadingIndicator = resultsSection.querySelector('.loading-indicator');
+                const emptyState = resultsSection.querySelector('.empty-state');
+                const insightsContainer = resultsSection.querySelector('.insights-container');
+                
+                if (!resultsSection) return;
+                
+                document.querySelectorAll('.result-section').forEach(section => {
+                    section.style.display = 'none';
+                });
+                
+                resultsSection.style.display = 'block';
+                loadingIndicator.style.display = 'block';
+                insightsContainer.style.display = 'none';
+                emptyState.style.display = 'none';
+
+                setTimeout(() => {
+                    const profiles = Array.from(this.profileManager.profiles.values());
+                    if (profiles.length < 2) {
+                        loadingIndicator.style.display = 'none';
+                        emptyState.style.display = 'block';
+                        return;
+                    }
+
+                    const insights = this.analysisManager.findKeyInsights(profiles);
+                    loadingIndicator.style.display = 'none';
+                    insightsContainer.style.display = 'flex';
+                    
+                    const insightsList = document.querySelector('.insights-list');
+                    if (insightsList) {
+                        insightsList.innerHTML = insights.map(insight => `
+                            <li class="insight-item">${insight}</li>
+                        `).join('');
+                    }
+                }, 500);
+            }
+
+            // Advanced Analysis Feature Stubs
+            showOverlapMatrix() {
+                this.showAdvancedResultSection('overlapMatrixResults');
+                // TODO: Implement overlap matrix rendering
+            }
+            showGrowthDecline() {
+                this.showAdvancedResultSection('growthDeclineResults');
+                // TODO: Implement growth/decline detection rendering
+            }
+            showArchetypes() {
+                this.showAdvancedResultSection('archetypeResults');
+                // TODO: Implement archetype detection rendering
+            }
+            showDiversity() {
+                this.showAdvancedResultSection('diversityResults');
+                // TODO: Implement diversity score rendering
+            }
+            showOutliers() {
+                this.showAdvancedResultSection('outlierResults');
+                // TODO: Implement outlier detection rendering
+            }
+            showCorrelation() {
+                this.showAdvancedResultSection('correlationResults');
+                // TODO: Implement correlation analysis rendering
+            }
+
+            showAdvancedResultSection(sectionId) {
+                document.querySelectorAll('.result-section').forEach(section => {
+                    section.style.display = 'none';
+                });
+                const section = document.getElementById(sectionId);
+                if (section) {
+                    section.style.display = 'block';
+                    const loading = section.querySelector('.loading-indicator');
+                    if (loading) loading.style.display = 'block';
+                    const empty = section.querySelector('.empty-state');
+                    if (empty) empty.style.display = 'none';
+                }
+            }
+        }
+
+        // Initialize the application when the DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            window.app = new App();
+            // Show any previously loaded profiles in the UI and chart
+            window.app.updateProfileList();
+            window.app.profileManager.profiles.forEach(profile => {
+                window.app.visualizationManager.addProfile(profile);
+            });
+            window.app.updateSelectedProfilesUI();
+        });
+    </script>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <h1>LinkedIn Interest Analyzer</h1>
+            <div class="action-buttons">
+                <button id="resetBtn" class="btn">Reset</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="profile-section">
+                <h2>Profiles</h2>
+                <button id="addProfileBtn" class="btn btn-primary">Add Profile</button>
+                <div id="profileList" class="profile-list">
+                    <!-- Profiles will be dynamically added here -->
+                </div>
+            </div>
+
+            <div class="combine-section">
+                <h3>Combine Profiles</h3>
+                <div class="combine-instructions">
+                    <p>Select two profiles to combine their interests</p>
+                    <div class="selected-profiles" id="selectedProfiles">
+                        <!-- Selected profiles will be shown here -->
+                    </div>
+                </div>
+                <button id="combineBtn" class="btn btn-primary" disabled>Combine Selected Profiles</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="canvas-area">
+                <div class="chart-container">
+                    <canvas id="visualizationChart"></canvas>
+                </div>
+            </div>
+
+            <div class="analysis-panel">
+                <h2>Analysis</h2>
+                <div class="analysis-buttons">
+                    <button id="clusterBtn" class="analysis-btn">Find Interest Clusters</button>
+                    <button id="insightsBtn" class="analysis-btn">Show Insights</button>
+                </div>
+                <div class="advanced-analysis">
+                    <h3>Advanced Analysis</h3>
+                    <div class="analysis-buttons">
+                        <button id="overlapMatrixBtn" class="analysis-btn">Interest Overlap Matrix</button>
+                        <button id="growthDeclineBtn" class="analysis-btn">Growth/Decline Detection</button>
+                        <button id="archetypeBtn" class="analysis-btn">Archetype Detection</button>
+                        <button id="diversityBtn" class="analysis-btn">Diversity Score</button>
+                        <button id="outlierBtn" class="analysis-btn">Outlier Detection</button>
+                        <button id="correlationBtn" class="analysis-btn">Correlation Analysis</button>
+                    </div>
+                </div>
+                <div class="analysis-results">
+                    <!-- Cluster Results -->
+                    <div id="clusterResults" class="result-section" style="display: none;">
+                        <h3>Interest Clusters</h3>
+                        <div class="loading-indicator">
+                            <div class="spinner"></div>
+                        </div>
+                        <div class="empty-state">
+                            Add at least two profiles to find interest clusters.
+                        </div>
+                        <div class="clusters-container">
+                            <!-- Clusters will be dynamically added here -->
+                        </div>
+                    </div>
+                    
+                    <!-- Insights Results -->
+                    <div id="insightsResults" class="result-section" style="display: none;">
+                        <h3>Profile Insights</h3>
+                        <div class="loading-indicator">
+                            <div class="spinner"></div>
+                        </div>
+                        <div class="empty-state">
+                            Add profiles to discover insights.
+                        </div>
+                        <div class="insights-container">
+                            <ul class="insights-list">
+                                <!-- Insights will be dynamically added here -->
+                            </ul>
+                        </div>
+                    </div>
+                    <!-- Advanced Analysis Results -->
+                    <div id="overlapMatrixResults" class="result-section" style="display: none;">
+                        <h3>Interest Overlap Matrix</h3>
+                        <div class="loading-indicator"><div class="spinner"></div></div>
+                        <div class="empty-state">Add at least two profiles to see overlap matrix.</div>
+                        <div class="overlap-matrix-container"></div>
+                    </div>
+                    <div id="growthDeclineResults" class="result-section" style="display: none;">
+                        <h3>Growth/Decline Detection</h3>
+                        <div class="loading-indicator"><div class="spinner"></div></div>
+                        <div class="empty-state">Update a profile to see growth/decline in interests.</div>
+                        <div class="growth-decline-container"></div>
+                    </div>
+                    <div id="archetypeResults" class="result-section" style="display: none;">
+                        <h3>Archetype Detection</h3>
+                        <div class="loading-indicator"><div class="spinner"></div></div>
+                        <div class="empty-state">Add profiles to detect archetypes.</div>
+                        <div class="archetype-container"></div>
+                    </div>
+                    <div id="diversityResults" class="result-section" style="display: none;">
+                        <h3>Diversity Score</h3>
+                        <div class="loading-indicator"><div class="spinner"></div></div>
+                        <div class="empty-state">Add profiles to see diversity scores.</div>
+                        <div class="diversity-container"></div>
+                    </div>
+                    <div id="outlierResults" class="result-section" style="display: none;">
+                        <h3>Outlier Detection</h3>
+                        <div class="loading-indicator"><div class="spinner"></div></div>
+                        <div class="empty-state">Add profiles to detect outliers.</div>
+                        <div class="outlier-container"></div>
+                    </div>
+                    <div id="correlationResults" class="result-section" style="display: none;">
+                        <h3>Correlation Analysis</h3>
+                        <div class="loading-indicator"><div class="spinner"></div></div>
+                        <div class="empty-state">Add profiles to see interest correlations.</div>
+                        <div class="correlation-container"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html> 
