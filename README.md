@@ -3,6 +3,8 @@
 **A 100% client-side, LLM-powered personality visualizer & social companion**  
 Pure HTML/CSS/JS, deployable on GitHub Pages. Features Facebook Login, OpenAI (default) + swappable LLMs, premium gating via PayPal/GCash, plus fun viral extras.
 
+[Click here to view the site]{https://honeylouluzon.github.io/Profile-Visualizer/}
+
 ---
 
 ## 📘 Table of Contents
