@@ -1,2 +1,2 @@
 # TASK
-1. [PROCESSING] Perform all the content of README.md perfectly one by one.
+1. [DONE] Perform all the content of README.md perfectly one by one.
