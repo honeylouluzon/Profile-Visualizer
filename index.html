@@ -16,6 +16,29 @@
   <!-- Top Bar with Settings -->
   <header class="top-bar">
     <h1>Vibe Coding Visualizer</h1>
+    <button id="open-settings" class="settings-btn" aria-label="Open Settings">
+      ⚙️
+    </button>
   </header>
+
+  <!-- Settings Modal -->
+  <div id="settings-modal" class="modal hidden">
+    <div class="modal-content">
+      <h2>Settings</h2>
+      <form id="settings-form">
+        <fieldset>
+          <legend>LLM Integration</legend>
+          <label>Provider:
+            <select id="llm-provider">
+              <option value="openai">OpenAI</option>
+              <option value="llama">LLaMA</option>
+              <option value="deepseek">DeepSeek</option>
+            </select>
+          </label>
+          <label>API Key:</label>
+        </fieldset>
+      </form>
+    </div>
+  </div>
 </body>
 </html>
