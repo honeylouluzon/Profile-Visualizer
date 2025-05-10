@@ -15,7 +15,7 @@ Pure HTML/CSS/JS, deployable on GitHub Pages. Features Facebook Login, OpenAI (d
 6. [js/settings.js (Settings Modal)](#jssettingsjs-settings-modal)  
 7. [js/fb-auth.js (Facebook Login)](#jsfb-authjs-facebook-login)  
 8. [js/viz.js (Information Dashboard)](#jsvizjs-information-dashboard)  
-9. [js/activities.js (Activities & Thoughts v3)](#jsactivitiesjs-activities--thoughts-v3)  
+9. [js/activities.js (Activities & Thoughts)](#jsactivitiesjs-activities--thoughts)  
 10. [js/presets.js (Presets & Comparison)](#jspresetsjs-presets--comparison)  
 11. [js/conversation.js (Conversation + Audio)](#jsconversationjs-conversation--audio)  
 12. [js/partnerships.js (Partnerships & Plans)](#jspartnershipsjs-partnerships--plans)  
@@ -48,7 +48,7 @@ All running **pure client-side**—no backend required!
 1. **Fork** this repository and clone it locally.  
 2. Enable GitHub Pages on the `main` branch (Settings → Pages → main/root).  
 3. Copy `js/settings.sample.js` → `js/settings.js` and fill in your credentials:
-   '''js
+``` js
    // js/settings.js
    export const FB_APP_ID        = 'YOUR_FACEBOOK_APP_ID';
    export let   LLM_PROVIDER     = 'openai';        // 'openai'|'llama'|'deepseek'|...
@@ -56,11 +56,13 @@ All running **pure client-side**—no backend required!
    export let   PAYMENT_MODE     = 'paypal';         // 'paypal'|'gcash'
    export let   PAYPAL_CLIENT_ID = 'YOUR_PAYPAL_ID';
    export let   GCASH_CLIENT_ID  = '';
+```
+
 4.	Open https://<you>.github.io/<repo>/ in your browser.
 5.	Click the ⚙️ gear to review settings, then Login with Facebook to begin!
 
 # Project Structure
-/
+```
 ├── index.html  
 ├── css/  
 │   └── styles.css  
@@ -75,9 +77,10 @@ All running **pure client-side**—no backend required!
 │   ├── llm.js  
 │   └── payment.js  
 └── README.md
-
+```
 
 # index.html (Full Template)
+``` html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -216,9 +219,10 @@ All running **pure client-side**—no backend required!
   <script type="module" src="js/payment.js"></script>
 </body>
 </html>
-
+```
 
 # css/styles.css
+``` css
 /* Reset & Basics */
 body { margin: 0; font-family: sans-serif; }
 .hidden { display: none; }
@@ -255,9 +259,10 @@ button, input, select { font-size:1rem; }
 
 /* Thought Output */
 #thought-output { margin-top:1rem; padding:1rem; background:#fafafa; border-radius:4px; }
-
+```
 
 # js/settings.js (Settings Modal)
+``` js
 // js/settings.js
 export let FB_APP_ID        = '';
 export let LLM_PROVIDER     = 'openai';
@@ -294,9 +299,10 @@ window.addEventListener('DOMContentLoaded', () => {
   const saved = localStorage.getItem('vibeSettings');
   if (saved) Object.assign(window, JSON.parse(saved));
 });
-
+```
 
 # js/fb-auth.js (Facebook Login)
+``` js
 // js/fb-auth.js
 import { FB_APP_ID } from './settings.js';
 import { initVisualization } from './viz.js';
@@ -320,9 +326,10 @@ document.getElementById('fb-login-btn').onclick = () => {
     } else alert('Login failed.');
   }, { scope:'email,public_profile,user_likes,user_posts,user_comments' });
 };
-
+```
 
 # js/viz.js (Information Dashboard)
+``` js
 // js/viz.js
 import Chart from 'chart.js/auto';
 
@@ -346,9 +353,10 @@ function extractInterests(likes, posts) {
   // placeholder: categorize & normalize
   return { labels:['Tech','Music','Sports','Art','Travel'], values:[7,5,4,6,3] };
 }
-
+```
 
 # js/activities.js (Activities & Thoughts)
+``` js
 // js/activities.js
 import { callLLM } from './llm.js';
 import { radarChart } from './viz.js';
@@ -422,9 +430,10 @@ function getJointActivities(u, o) {
   // combine interests to find 6 joint activities
   return [{ label:'Attend Tech Concert' },{ label:'Travel Photography' },/*…*/];
 }
-
+```
 
 # js/presets.js (Presets & Comparison)
+``` js
 // js/presets.js
 import { callLLM } from './llm.js';
 
@@ -444,9 +453,10 @@ document.getElementById('add-preset').onclick = async () => {
     mod.radarChart.update();
   });
 };
-
+```
 
 # js/conversation.js (Conversation + Audio)
+``` js
 // js/conversation.js
 import { callLLM } from './llm.js';
 
@@ -471,9 +481,10 @@ export async function initConversation(user, otherName) {
     speechSynthesis.speak(u);
   };
 }
-
+```
 
 # js/partnerships.js (Partnerships & Plans)
+``` js
 // js/partnerships.js
 import { callLLM } from './llm.js';
 
@@ -490,9 +501,10 @@ export async function initPartnerships(userName, otherType) {
     }
   };
 }
-
+```
 
 # js/llm.js (LLM Integration)
+``` js
 // js/llm.js
 import { LLM_PROVIDER, LLM_API_KEY } from './settings.js';
 
@@ -514,9 +526,10 @@ export async function callLLM(prompt) {
   const data = await res.json();
   return data.choices?.[0]?.message?.content || data.result;
 }
-
+```
 
 # js/payment.js (Payment Integration)
+``` js
 // js/payment.js
 import { PAYMENT_MODE, PAYPAL_CLIENT_ID, GCASH_CLIENT_ID } from './settings.js';
 
@@ -535,7 +548,7 @@ export function initPayment() {
   }
 }
 document.addEventListener('DOMContentLoaded', initPayment);
-
+```
 
 # Deployment
 1.	Push to main.
@@ -544,19 +557,19 @@ document.addEventListener('DOMContentLoaded', initPayment);
 
 
 # Features & Usage
-•	⚙️ **Settings**: swap LLM/API keys & payment via top-right gear.  
-•	🔐 **Login**: fetch name, email, picture, likes, posts, comments.  
-•	📊 **Information**: radar chart of your interests.  
-•	🎯 **Activities**:
-	1.	Your Activities (based on your profile)
-	2.	Other’s Activities (based on the other entity)
-	3.	Joint Activities (compatible fun activities)
+• ⚙️ **Settings**: swap LLM/API keys & payment via top-right gear.  
+• 🔐 **Login**: fetch name, email, picture, likes, posts, comments.  
+• 📊 **Information**: radar chart of your interests.  
+• 🎯 **Activities**:
+1. Your Activities (based on your profile)
+2. Other’s Activities (based on the other entity)
+3. Joint Activities (compatible fun activities)
 – Click any to generate a thought and preview how it changes your radar.
-•	📑 **Presets**: compare with any profession/personality.  
-•	💬 **Conversation**: prep topics + example chat + audio “podcast”.  
-•	🤝 **Partnerships**: project ideas + step-by-step plans.  
-•	💳 **Premium gating**: blur sections until PayPal/GCash payment.  
-•	🎉 **Viral extras**: shareable charts, personality cards, embed widget, leaderboards, “Talk-Like-Me” mode.
+• 📑 **Presets**: compare with any profession/personality.  
+• 💬 **Conversation**: prep topics + example chat + audio “podcast”.  
+• 🤝 **Partnerships**: project ideas + step-by-step plans.  
+• 💳 **Premium gating**: blur sections until PayPal/GCash payment.  
+• 🎉 **Viral extras**: shareable charts, personality cards, embed widget, leaderboards, “Talk-Like-Me” mode.
 
 Copilot will help fill in helper functions (extractInterests, activity analysis, GCash integration). Enjoy building your viral Vibe Coding Visualizer! 😊
 
